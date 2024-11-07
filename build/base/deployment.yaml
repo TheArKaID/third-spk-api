@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nodejs-api-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nodejs-api-pod
+  template:
+    metadata:
+      name: nodejs-api-pod
+      labels:
+        app: nodejs-api-pod
+      annotations:
+        gke-gcsfuse/volumes: "true"
+    spec:
+      volumes:
+        - name: nodejs-share
+          csi:
+            driver: gcsfuse.csi.storage.gke.io
+            volumeAttributes:
+              mountOptions: "implicit-dirs,only-dir=nodejs"
+        - name: insight-publickey-configmap-volume
+          configMap:
+            name: insight-publickey-configmap
+      containers:
+        - name: nodejs-api-container
+          image: IMAGE_NAME
+          resources: {}
+          ports:
+            - containerPort: 15002
+          volumeMounts:
+            - name: nodejs-share
+              mountPath: /usr/local/node/api/public
+            - name: insight-publickey-configmap-volume
+              mountPath: /usr/local/node/api/jwtRSA256-public.pem
+              subPath: jwtRSA256-public.pem
+          envFrom:
+            - configMapRef:
+                name: nodejs-api-configmap
+            - secretRef:
+                name: nodejs-api-secret
