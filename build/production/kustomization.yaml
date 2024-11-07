@@ -1,0 +1,15 @@
+resources:
+  - ./../base
+patches:
+  - target:
+      kind: Deployment
+    patch: |-
+      - op: add
+        path: /metadata/namespace
+        value: production
+      - op: add
+        path: /spec/template/spec/serviceAccountName
+        value: insight-prod-ksa
+      - op: add
+        path: /spec/template/spec/volumes/0/csi/volumeAttributes/bucketName
+        value: insight-production
